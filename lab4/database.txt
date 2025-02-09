@@ -1,0 +1,4 @@
+google.com 142.250.64.78
+openai.com 104.193.168.18
+github.com 140.82.114.3
+
