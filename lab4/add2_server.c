@@ -20,8 +20,16 @@ struct Book {
 struct Book database[MAX_BOOKS];
 int book_count = 0;
 
+void to_lowercase(const char* source, char* dest) {
+    while (*source) {
+        *dest++ = tolower(*source++);
+    }
+    *dest = '\0';
+}
+
 void add_book(char* data) {
     if (book_count >= MAX_BOOKS) {
+        printf("Database is full. Cannot add more books.\n");
         return;
     }
     sscanf(data, "%d;%99[^;];%99[^;];%d;%99[^\n]",
@@ -36,10 +44,12 @@ void add_book(char* data) {
 char* display_books() {
     static char response[MAX_LEN * MAX_BOOKS];
     response[0] = '\0';
+
     if (book_count == 0) {
-        snprintf(response, MAX_LEN, "No books available.");
+        snprintf(response, MAX_LEN, "No books available.\n");
         return response;
     }
+
     for (int i = 0; i < book_count; i++) {
         char temp[MAX_LEN];
         snprintf(temp, MAX_LEN, "Accession Number: %d, Title: %s, Author: %s, Pages: %d, Publisher: %s\n",
@@ -50,27 +60,32 @@ char* display_books() {
     return response;
 }
 
-char* to_lowercase(char* str) {
-    static char temp[MAX_LEN];
-    int i = 0;
-    while (str[i] && i < MAX_LEN - 1) {
-        temp[i] = tolower(str[i]);
-        i++;
-    }
-    temp[i] = '\0';
-    return temp;
+#include <ctype.h>
+#include <string.h>
+
+char* trim_whitespace(char* str) {
+    char* end;
+    while (isspace((unsigned char)*str)) str++;  // Trim leading spaces
+    if (*str == 0) return str;                   // All spaces?
+
+    end = str + strlen(str) - 1;
+    while (end > str && isspace((unsigned char)*end)) end--;  // Trim trailing spaces
+    *(end + 1) = '\0';
+    return str;
 }
 
 char* search_book(char* keyword) {
     static char response[MAX_LEN * MAX_BOOKS];
     response[0] = '\0';
+
     char lower_keyword[MAX_LEN];
-    strcpy(lower_keyword, to_lowercase(keyword));
+    to_lowercase(trim_whitespace(keyword), lower_keyword);
     int found = 0;
 
     for (int i = 0; i < book_count; i++) {
-        char* lower_title = to_lowercase(database[i].title);
-        char* lower_author = to_lowercase(database[i].author);
+        char lower_title[MAX_LEN], lower_author[MAX_LEN];
+        to_lowercase(database[i].title, lower_title);
+        to_lowercase(database[i].author, lower_author);
 
         if (strstr(lower_title, lower_keyword) || strstr(lower_author, lower_keyword)) {
             found = 1;
@@ -88,7 +103,6 @@ char* search_book(char* keyword) {
 
     return response;
 }
-
 
 
 int delete_book(int acc_number) {
@@ -174,4 +188,3 @@ int main() {
 
     return 0;
 }
-
